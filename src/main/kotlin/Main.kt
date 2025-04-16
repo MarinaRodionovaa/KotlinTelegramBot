@@ -2,7 +2,11 @@ package org.example
 
 import java.io.File
 
-data class Word(val word: String, val translate: String, var correctAnswersCount: Int = 0)
+data class Word(
+    val word: String,
+    val translate: String,
+    var correctAnswersCount: Int = 0
+)
 
 fun main() {
     val wordsFile: File = File("words.txt")
@@ -10,9 +14,8 @@ fun main() {
 
     for (line in wordsFile.readLines()) {
         val lineList = line.split("|")
-        val answersNullPlug = { if (lineList.size == 2) 0 else lineList[2].toInt() }
         dictionary.add(
-            Word(lineList[0], lineList[1], answersNullPlug())
+            Word(lineList[0], lineList[1], lineList.getOrNull(2)?.toIntOrNull() ?: 0)
         )
 
     }
