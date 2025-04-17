@@ -23,7 +23,7 @@ fun main() {
     }
 }
 
-fun loadDictionary(): MutableList<Word> {
+fun loadDictionary(): List<Word> {
     val wordsFile: File = File("words.txt")
     val dictionary: MutableList<Word> = mutableListOf()
 
@@ -34,6 +34,6 @@ fun loadDictionary(): MutableList<Word> {
         )
 
     }
-    return dictionary
+    return dictionary.toList()
 
 }
