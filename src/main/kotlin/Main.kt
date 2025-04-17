@@ -16,7 +16,13 @@ fun main() {
         when (menuAnswer) {
             0 -> break
             1 -> println("Учить слова")
-            2 -> println("Статистика")
+            2 -> {
+                println("Статистика")
+                val totalCount = dictionary.size
+                val learnedCount = getLearnedCount(dictionary)
+                val percent = learnedCount / totalCount * 100
+                println("Выучено $learnedCount из $totalCount слов | $percent%")
+            }
             else -> println("Введите число 1, 2 или 0")
         }
 
@@ -36,4 +42,8 @@ fun loadDictionary(): List<Word> {
     }
     return dictionary.toList()
 
+}
+
+fun getLearnedCount(dictionary: List<Word>): Int {
+    return dictionary.filter { word -> word.correctAnswersCount >= 3 }.count()
 }
