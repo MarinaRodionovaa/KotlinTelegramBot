@@ -2,6 +2,8 @@ package org.example
 
 import java.io.File
 
+const val COUNTS_OF_WORDS = 4
+
 data class Word(
     val word: String,
     val translate: String,
@@ -17,49 +19,47 @@ fun main() {
             0 -> break
             1 -> {
                 println("Учить слова")
-                var notLearnedList = getNotLearnedList(dictionary)
-                var isContinueLearn = notLearnedList.isNotEmpty()
 
-                while (isContinueLearn) {
-                    for (notLearnedWord in notLearnedList) {
-                        println("\n${notLearnedWord.word}:")
-                        val questionWords =
-                            notLearnedList.filter { it.translate != notLearnedWord.translate }.take(3)
-                                .map { it.translate }
-                                .toMutableList()
-                        questionWords.add(notLearnedWord.translate)
-                        questionWords.shuffle()
+                while (getNotLearnedList(dictionary).isNotEmpty()) {
+                    val listToLearn: List<Word>
+                    if (getNotLearnedList(dictionary).size >= COUNTS_OF_WORDS) {
+                        listToLearn = getNotLearnedList(dictionary).shuffled().take(COUNTS_OF_WORDS)
 
-                        for (i in 0..<questionWords.size) {
-                            println("${i + 1}) - ${questionWords[i]}")
-                        }
-                        println("----------\n" + "0 - Меню")
+                    } else {
+                        listToLearn = getNotLearnedList(dictionary).shuffled()
+                            .take(COUNTS_OF_WORDS) + getLearnedList(dictionary).shuffled().take(
+                            4 - getNotLearnedList(dictionary).size
+                        )
+                    }
 
-                        val userAnswerInput = readln().toIntOrNull() ?: -1
-                        val correctAnswerId = questionWords.indexOf(notLearnedWord.translate)
+                    val questionWords = listToLearn.map { it.translate }
+                    val (questionWord, translate) = listToLearn.random()
 
-                        if (userAnswerInput == 0) {
-                            isContinueLearn = false
-                            break
-                        } else if (userAnswerInput - 1 == correctAnswerId) {
-                            println("Правильно!")
-                            dictionary.filter { it.word == notLearnedWord.word }.forEach { it.correctAnswersCount += 1 }
-                            saveDictionary(dictionary)
-                            notLearnedList = getNotLearnedList(dictionary)
-                        } else {
-                            println("Неправильно! ${notLearnedWord.word} – ${notLearnedWord.translate}")
-                        }
+                    println("$questionWord:")
+                    questionWords.forEach { println("${questionWords.indexOf(it) + 1} - $it") }
+                    println("----------\n" + "0 - Меню")
+                    val correctAnswerId = questionWords.indexOf(translate)
 
+                    val userAnswerInput = readln().toIntOrNull() ?: -1
+                    if (userAnswerInput == 0) {
+                        break
+                    } else if (userAnswerInput - 1 == correctAnswerId) {
+                        println("Правильно!")
+                        dictionary.filter { it.word == questionWord }.forEach { it.correctAnswersCount += 1 }
+                        saveDictionary(dictionary)
+                    } else {
+                        println("Неправильно! ${questionWord} – ${(questionWords[correctAnswerId])}")
                     }
 
                 }
+                if (getNotLearnedList(dictionary).isEmpty()) println("Все слова выучены")
             }
 
             2 -> {
                 println("Статистика")
                 val totalCount = dictionary.size
-                val learnedCount = getLearnedCount(dictionary)
-                val percent = learnedCount / totalCount * 100
+                val learnedCount = getLearnedList(dictionary).size
+                val percent = (learnedCount.toFloat() / totalCount.toFloat() * 100).toInt()
                 println("Выучено $learnedCount из $totalCount слов | $percent%")
             }
 
@@ -84,15 +84,12 @@ fun loadDictionary(): List<Word> {
 
 }
 
-fun getLearnedCount(dictionary: List<Word>): Int {
-    return dictionary.filter { word -> word.correctAnswersCount >= 3 }.count()
+fun getLearnedList(dictionary: List<Word>): List<Word> {
+    return dictionary.filter { word -> word.correctAnswersCount >= 3 }
 }
 
 fun getNotLearnedList(dictionary: List<Word>): MutableList<Word> {
     val notLearnedList = dictionary.filter { it.correctAnswersCount < 3 }.toMutableList()
-    if (notLearnedList.isEmpty()) {
-        println("Все слова выучены")
-    }
     return notLearnedList
 }
 
