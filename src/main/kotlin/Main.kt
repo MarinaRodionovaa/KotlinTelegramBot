@@ -20,35 +20,39 @@ fun main() {
             1 -> {
                 println("Учить слова")
 
-                while (getNotLearnedList(dictionary).isNotEmpty()) {
-                    val listToLearn: List<Word>
-                    if (getNotLearnedList(dictionary).size >= COUNTS_OF_WORDS) {
-                        listToLearn = getNotLearnedList(dictionary).shuffled().take(COUNTS_OF_WORDS)
-
-                    } else {
-                        listToLearn = getNotLearnedList(dictionary).shuffled()
-                            .take(COUNTS_OF_WORDS) + getLearnedList(dictionary).shuffled().take(
-                            4 - getNotLearnedList(dictionary).size
-                        )
+                while (true) {
+                    val notLearnedList = getNotLearnedList(dictionary)
+                    if (notLearnedList.isEmpty()) {
+                        println("Все слова выучены")
+                        break
                     }
 
-                    val questionWords = listToLearn.map { it.translate }
-                    val (questionWord, translate) = listToLearn.random()
+                    var listToLearn = notLearnedList.shuffled().take(COUNTS_OF_WORDS)
+                    val questionWord = listToLearn.random()
 
-                    println("$questionWord:")
-                    questionWords.forEach { println("${questionWords.indexOf(it) + 1} - $it") }
+                    listToLearn += getLearnedList(dictionary).shuffled()
+                        .take((COUNTS_OF_WORDS - notLearnedList.size).coerceAtLeast(0))
+
+
+                    println("${questionWord.word}:")
+                    var correctAnswerId: Int = -1
+                    listToLearn.shuffled().forEachIndexed { index, value ->
+                        if (value == questionWord) {
+                            correctAnswerId = index
+                        }
+                        println("${index + 1} - ${value.translate}")
+                    }
                     println("----------\n" + "0 - Меню")
-                    val correctAnswerId = questionWords.indexOf(translate)
 
                     val userAnswerInput = readln().toIntOrNull() ?: -1
                     if (userAnswerInput == 0) {
                         break
                     } else if (userAnswerInput - 1 == correctAnswerId) {
                         println("Правильно!")
-                        dictionary.filter { it.word == questionWord }.forEach { it.correctAnswersCount += 1 }
+                        questionWord.correctAnswersCount += 1
                         saveDictionary(dictionary)
                     } else {
-                        println("Неправильно! ${questionWord} – ${(questionWords[correctAnswerId])}")
+                        println("Неправильно! ${questionWord.word} – ${(listToLearn[correctAnswerId].translate)}")
                     }
 
                 }
@@ -94,9 +98,10 @@ fun getNotLearnedList(dictionary: List<Word>): MutableList<Word> {
 }
 
 fun saveDictionary(dictionary: List<Word>) {
-    File("words.txt").writeText("")
+    val file = File("words.txt")
+    file.writeText("")
     dictionary.forEach {
-        File("words.txt").appendText("${it.word}|${it.translate}|${it.correctAnswersCount}\n")
+        file.appendText("${it.word}|${it.translate}|${it.correctAnswersCount}\n")
     }
 
 }
