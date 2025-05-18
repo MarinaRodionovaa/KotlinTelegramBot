@@ -17,6 +17,7 @@ class LearnWordsTrainer() {
 
     private var question: Question? = null
     private val dictionary = loadDictionary()
+    private val maxCorrectAnswersCount = 3
 
     fun getNextQuestion(): Question? {
         val notLearnedList = getNotLearnedList()
@@ -35,7 +36,7 @@ class LearnWordsTrainer() {
 
             if (userAnswer == correctAnswerId) {
                 it.correctAnswer.correctAnswersCount++
-                saveDictionary(dictionary)
+                saveDictionary()
                 true
             } else {
                 false
@@ -44,7 +45,7 @@ class LearnWordsTrainer() {
     }
 
     fun getStatistics(): Statistics {
-        val learned = dictionary.filter { word -> word.correctAnswersCount >= 3 }.size
+        val learned = dictionary.filter { word -> word.correctAnswersCount >= maxCorrectAnswersCount }.size
         val total = dictionary.size
         val percent = learned * 100 / total
 
@@ -66,7 +67,7 @@ class LearnWordsTrainer() {
 
     }
 
-    private fun saveDictionary(dictionary: List<Word>) {
+    private fun saveDictionary() {
         val file = File("words.txt")
         file.writeText("")
         dictionary.forEach {
@@ -76,12 +77,12 @@ class LearnWordsTrainer() {
     }
 
     private fun getNotLearnedList(): MutableList<Word> {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < 3 }.toMutableList()
+        val notLearnedList = dictionary.filter { it.correctAnswersCount < maxCorrectAnswersCount }.toMutableList()
         return notLearnedList
     }
 
     private fun getLearnedList(): List<Word> {
-        return dictionary.filter { word -> word.correctAnswersCount >= 3 }
+        return dictionary.filter { word -> word.correctAnswersCount >= maxCorrectAnswersCount }
     }
 
 }
