@@ -56,15 +56,18 @@ class LearnWordsTrainer() {
         val wordsFile: File = File("words.txt")
         val dictionary: MutableList<Word> = mutableListOf()
 
-        for (line in wordsFile.readLines()) {
-            val lineList = line.split("|")
-            dictionary.add(
-                Word(lineList[0], lineList[1], lineList.getOrNull(2)?.toIntOrNull() ?: 0)
-            )
+        try {
+            for (line in wordsFile.readLines()) {
+                val lineList = line.split("|")
+                dictionary.add(
+                    Word(lineList[0], lineList[1], lineList.getOrNull(2)?.toIntOrNull() ?: 0)
+                )
 
+            }
+            return dictionary.toList()
+        } catch (e: IndexOutOfBoundsException) {
+            throw IllegalStateException("некорректный файл")
         }
-        return dictionary.toList()
-
     }
 
     private fun saveDictionary() {
