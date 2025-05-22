@@ -10,13 +10,18 @@ data class Word(
 
 fun Question.asConsoleString(): String {
     val variants =
-        this.variants.mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.word}" }.joinToString("\n")
-    return this.correctAnswer.translate + "\n" + variants + "\n----------\n" + "0 - Меню"
+        this.variants.mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }.joinToString("\n")
+    return this.correctAnswer.word + "\n" + variants + "\n----------\n" + "0 - Меню"
 }
 
 fun main() {
 
-    val trainer = LearnWordsTrainer()
+    val trainer = try {
+        LearnWordsTrainer()
+    } catch (e: Exception) {
+        println("Не удалось загрузить словарь")
+        return
+    }
 
     while (true) {
         println("Меню: \n1 – Учить слова\n2 – Статистика\n0 – Выход")

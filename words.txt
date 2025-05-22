@@ -1,7 +1,7 @@
 hello|привет|0
 dog|собака|3
-cat|кошка|1
+cat|кошка|3
 conscious|осознанный|3
-cautious|осторожный|2
-drift apart|отдаляться|1
+cautious|осторожный|3
+drift apart|отдаляться|3
 hit it off|ладить|3
