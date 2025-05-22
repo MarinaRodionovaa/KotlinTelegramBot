@@ -5,10 +5,12 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-fun main(args: Array<String>){
+const val TG_URL = "https://api.telegram.org/bot"
 
-    val botToken =args[0]
-    val urlGetMe = "https://api.telegram.org/bot$botToken/getMe"
+fun main(args: Array<String>) {
+
+    val botToken = args[0]
+    val urlGetMe = "$TG_URL$botToken/getMe"
     val urlGetUpdates = "https://api.telegram.org/bot$botToken/getUpdates"
 
     val client = HttpClient.newBuilder().build()
@@ -21,9 +23,4 @@ fun main(args: Array<String>){
 
     println(responseGetMe.body())
     println(responseGetUpdates.body())
-
-
-
-
-
 }
