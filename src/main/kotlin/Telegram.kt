@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
 
     val botToken = args[0]
     val urlGetMe = "$TG_URL$botToken/getMe"
-    val urlGetUpdates = "https://api.telegram.org/bot$botToken/getUpdates"
+    val urlGetUpdates = "$TG_URL$botToken/getUpdates"
 
     val client = HttpClient.newBuilder().build()
 
