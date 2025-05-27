@@ -1,7 +1,5 @@
 package org.example
 
-const val TG_URL = "https://api.telegram.org/bot"
-
 fun main(args: Array<String>) {
     val botToken = args[0]
     var updateId: Int = 0
@@ -20,7 +18,7 @@ fun main(args: Array<String>) {
         val updateIdString = updateIdRegex.find(updates)?.groups?.get(1)?.value ?: continue
         updateId = updateIdString.toInt() + 1
 
-        val chatId = chatIdRegex.find(updates)?.groups?.get(1)?.value?.toInt() ?: 0
+        val chatId = chatIdRegex.find(updates)?.groups?.get(1)?.value?.toInt() ?: continue
         val text = messageTextRegex.find(updates)?.groups?.get(1)?.value ?: continue
 
         if (text.lowercase() == "hello") {
