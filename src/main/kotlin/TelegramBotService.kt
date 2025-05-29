@@ -68,7 +68,6 @@ class TelegramBotService(private val botToken: String) {
                 .build()
             val responseGet = client.send(requestGet, HttpResponse.BodyHandlers.ofString())
             return responseGet.body()
-//            return getResponseFromUrl(urlSendMessage)
         } catch (e: Exception) {
             println(e.message)
             return "не удалось отправить сообщение"
