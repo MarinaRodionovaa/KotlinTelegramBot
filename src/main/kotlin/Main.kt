@@ -2,12 +2,6 @@ package org.example
 
 const val COUNTS_OF_WORDS = 4
 
-data class Word(
-    val word: String,
-    val translate: String,
-    var correctAnswersCount: Int = 0
-)
-
 fun Question.asConsoleString(): String {
     val variants =
         this.variants.mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }.joinToString("\n")
