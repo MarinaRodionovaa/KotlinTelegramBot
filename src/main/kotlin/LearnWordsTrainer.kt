@@ -27,13 +27,17 @@ class LearnWordsTrainer() {
 
     fun getNextQuestion(): Question? {
         val notLearnedList = getNotLearnedList()
-        var listToLearn = notLearnedList.shuffled().take(COUNTS_OF_WORDS)
-        val questionWord = listToLearn.random()
+        if (notLearnedList.isNotEmpty()) {
+            var listToLearn = notLearnedList.shuffled().take(COUNTS_OF_WORDS)
+            val questionWord = listToLearn.random()
 
-        listToLearn += getLearnedList().shuffled()
-            .take((COUNTS_OF_WORDS - notLearnedList.size).coerceAtLeast(0))
-        question = Question(listToLearn.shuffled(), questionWord)
-        return question
+            listToLearn += getLearnedList().shuffled()
+                .take((COUNTS_OF_WORDS - notLearnedList.size).coerceAtLeast(0))
+            question = Question(listToLearn.shuffled(), questionWord)
+            return question
+        } else {
+            return null
+        }
     }
 
     fun checkAnswer(userAnswer: Int): Boolean {
