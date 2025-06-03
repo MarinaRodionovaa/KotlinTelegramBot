@@ -4,15 +4,17 @@ const val STATISTIC_CALLBACK = "statistic_callback"
 const val LEARN_WORDS_CALLBACK = "learn_words_callback"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 const val COMEBACK_CALLBACK = "menu_callback"
+const val TIMER_SLEEP_SECONDS: Long = 2000
 
-fun checkNextQuestionAndSend(trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Int): Word? {
+const val START_COMMAND = "/start"
+const val MENU_COMMAND = "menu"
+
+fun checkNextQuestionAndSend(trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Int) {
     val question = trainer.getNextQuestion()
     if (question == null) {
         println(tgBotService.sendMessage(chatId, "Все слова выучены"))
-        return null
     } else {
         println(tgBotService.sendQuestion(chatId, question))
-        return question.correctAnswer
     }
 }
 
@@ -27,10 +29,9 @@ fun main(args: Array<String>) {
 
     val tgBotService = TelegramBotService(botToken)
     val trainer = LearnWordsTrainer()
-    var thisWord: Word? = null
 
     while (true) {
-        Thread.sleep(2000)
+        Thread.sleep(TIMER_SLEEP_SECONDS)
         val updates: String = tgBotService.getUpdates(updateId)
         println(updates)
 
@@ -41,46 +42,45 @@ fun main(args: Array<String>) {
 
         val data = dataRegex.find(updates)?.groups?.get(1)?.value
 
-        when (data) {
-            STATISTIC_CALLBACK -> {
+        when {
+            data == STATISTIC_CALLBACK -> {
                 val statistic = trainer.getStatistics()
                 val statisticString = "Выучено ${statistic.learned} из ${statistic.total} слов | ${statistic.percent}%"
                 println(tgBotService.sendMessage(chatId, statisticString))
             }
 
-            LEARN_WORDS_CALLBACK -> {
-                thisWord = checkNextQuestionAndSend(trainer, tgBotService, chatId)
+            data == LEARN_WORDS_CALLBACK -> {
+                checkNextQuestionAndSend(trainer, tgBotService, chatId)
             }
 
-            COMEBACK_CALLBACK -> {
+            data == COMEBACK_CALLBACK -> {
                 println(tgBotService.sendMenu(chatId))
             }
 
-            else -> {
-                if (data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true && thisWord != null) {
-                    if (trainer.checkAnswer(data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toInt())) {
-                        println(tgBotService.sendMessage(chatId, "Верно!"))
-                    } else {
-                        println(
-                            tgBotService.sendMessage(
-                                chatId,
-                                "Неправильно! ${thisWord.word} -  ${thisWord.translate} "
-                            )
+            data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true && trainer.currentQuestion != null -> {
+                if (trainer.checkAnswer(data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toInt())) {
+                    println(tgBotService.sendMessage(chatId, "Верно!"))
+                } else {
+                    println(
+                        tgBotService.sendMessage(
+                            chatId,
+                            "Неправильно! ${trainer.currentQuestion!!.correctAnswer.word} -  ${trainer.currentQuestion!!.correctAnswer.translate} "
                         )
-                    }
-                    thisWord = checkNextQuestionAndSend(trainer, tgBotService, chatId)
+                    )
                 }
+                checkNextQuestionAndSend(trainer, tgBotService, chatId)
             }
+
         }
+
 
         val text = messageTextRegex.find(updates)?.groups?.get(1)?.value ?: continue
 
         when (text.lowercase()) {
-            "/start" -> println(tgBotService.sendMenu(chatId))
-            "hello" -> println(tgBotService.sendMessage(chatId, "Hello"))
+            START_COMMAND -> println(tgBotService.sendMenu(chatId))
             // TODO: Исправить баг, когда бот отправляет апдейт со словом из словаря hello отправляет его же в ответ так же происходит и со словом меню
             // TODO: Наверное стоит либо убрать эти команды либо добавить / перед, либо добавить проверку от кого апдейт
-            "menu" -> println(tgBotService.sendMenu(chatId))
+            MENU_COMMAND -> println(tgBotService.sendMenu(chatId))
         }
     }
 }

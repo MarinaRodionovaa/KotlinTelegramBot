@@ -81,7 +81,6 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendMenu(chatId: Int): String {
-        val urlSendMessage = "$TG_URL$botToken/sendMessage"
         val sendMenuBody = """
             {
               "chat_id": $chatId,

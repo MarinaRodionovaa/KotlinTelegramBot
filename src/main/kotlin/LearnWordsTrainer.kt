@@ -21,7 +21,7 @@ data class Question(
 
 class LearnWordsTrainer() {
 
-    private var question: Question? = null
+    var currentQuestion: Question? = null
     private val dictionary = loadDictionary()
     private val maxCorrectAnswersCount = 3
 
@@ -33,15 +33,15 @@ class LearnWordsTrainer() {
 
             listToLearn += getLearnedList().shuffled()
                 .take((COUNTS_OF_WORDS - notLearnedList.size).coerceAtLeast(0))
-            question = Question(listToLearn.shuffled(), questionWord)
-            return question
+            currentQuestion = Question(listToLearn.shuffled(), questionWord)
+            return currentQuestion
         } else {
             return null
         }
     }
 
     fun checkAnswer(userAnswer: Int): Boolean {
-        return question?.let {
+        return currentQuestion?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
 
             if (userAnswer == correctAnswerId) {
@@ -99,4 +99,3 @@ class LearnWordsTrainer() {
     }
 
 }
-
