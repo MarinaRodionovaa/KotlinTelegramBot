@@ -1,6 +1,6 @@
-hello|привет|0
+hello|привет|3
 dog|собака|3
-cat|кошка|3
+cat|кошка|0
 conscious|осознанный|3
 cautious|осторожный|3
 drift apart|отдаляться|3
