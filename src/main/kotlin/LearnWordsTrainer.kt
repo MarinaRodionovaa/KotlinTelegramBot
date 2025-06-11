@@ -1,7 +1,9 @@
 package org.example
 
+import kotlinx.serialization.Serializable
 import java.io.File
 
+@Serializable
 data class Word(
     val word: String,
     val translate: String,
@@ -19,8 +21,7 @@ data class Question(
     val correctAnswer: Word,
 )
 
-class LearnWordsTrainer() {
-
+class LearnWordsTrainer(private val fileName: String = "words.txt") {
     var currentQuestion: Question? = null
     private val dictionary = loadDictionary()
     private val maxCorrectAnswersCount = 3
@@ -63,7 +64,10 @@ class LearnWordsTrainer() {
     }
 
     private fun loadDictionary(): List<Word> {
-        val wordsFile: File = File("words.txt")
+        val wordsFile: File = File(fileName)
+        if (!wordsFile.exists()) {
+            File("words.txt").copyTo(wordsFile)
+        }
         val dictionary: MutableList<Word> = mutableListOf()
 
         try {
@@ -81,7 +85,7 @@ class LearnWordsTrainer() {
     }
 
     private fun saveDictionary() {
-        val file = File("words.txt")
+        val file = File(fileName)
         file.writeText("")
         dictionary.forEach {
             file.appendText("${it.word}|${it.translate}|${it.correctAnswersCount}\n")
@@ -96,6 +100,11 @@ class LearnWordsTrainer() {
 
     private fun getLearnedList(): List<Word> {
         return dictionary.filter { word -> word.correctAnswersCount >= maxCorrectAnswersCount }
+    }
+
+    fun resetProgress() {
+        dictionary.forEach { it.correctAnswersCount = 0 }
+        saveDictionary()
     }
 
 }
