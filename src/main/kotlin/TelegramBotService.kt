@@ -1,12 +1,13 @@
 package org.example
 
+import kotlinx.serialization.json.Json
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class TelegramBotService(private val botToken: String) {
+class TelegramBotService(private val botToken: String, val json : Json) {
     private val client = HttpClient.newBuilder().build()
 
     companion object {
@@ -34,73 +35,55 @@ class TelegramBotService(private val botToken: String) {
         }
     }
 
-    fun getUpdates(updateId: Int): String {
+    fun getUpdates(updateId: Long): String {
         val urlGetUpdates = "$TG_URL$botToken/getUpdates?offset=$updateId"
         return getResponseFromUrl(urlGetUpdates)
     }
 
-    fun sendMessage(chatId: Int, text: String): String {
-        val encodedText = URLEncoder.encode(text, "UTF-8")
-        val urlSendMessage = "$TG_URL$botToken/sendMessage?text=$encodedText&chat_id=$chatId"
-        try {
-            return getResponseFromUrl(urlSendMessage)
-        } catch (e: Exception) {
-            println(e.message)
-            return "не удалось отправить сообщение"
-        }
+    fun sendMessage(chatId: Long, text: String): String {
+        val requestBody = SendMessageRequest(
+            chatId = chatId,
+            text = text
+        )
+        val requestBodyString = json.encodeToString(requestBody)
+        return sendPostJsonMessage(requestBodyString)
     }
 
-    fun sendQuestion(chatId: Int, question: Question): String {
-        val variants = question.variants.mapIndexed { index: Int, word: Word ->
-            """{
-                    "text":"${index + 1} - ${word.translate}",
-                    "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX${index}"
-                }""".trimIndent()
-        }.joinToString(",\n")
-
-        val sendQuestionBody = """
-            {
-                "chat_id": $chatId,
-                "text": "${question.correctAnswer.word}",
-                "reply_markup": {
-                    "inline_keyboard":[
-                        [
-                            $variants
-                        ],
-                        [
-                            {
-                                "text": "Основное меню",
-                                "callback_data": "$COMEBACK_CALLBACK"
-                            }
-                        ]                     
-                    ]
-                }
-            }
-        """.trimIndent()
-        return sendPostJsonMessage(sendQuestionBody)
+    fun sendQuestion(chatId: Long, question: Question): String {
+        val requestBody = SendMessageRequest(
+            chatId = chatId,
+            text = question.correctAnswer.word,
+            replyMarkup = ReplyMarkup(
+                listOf(question.variants.mapIndexed { index, word ->
+                    InlineKeyboard(
+                        text = word.translate, callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
+                    )
+                })
+            )
+        )
+        val requestBodyString = json.encodeToString(requestBody)
+        return sendPostJsonMessage(requestBodyString)
     }
 
-    fun sendMenu(chatId: Int): String {
-        val sendMenuBody = """
-            {
-              "chat_id": $chatId,
-              "text": "Основное меню",
-              "reply_markup": {
-                "inline_keyboard": [
-                  [
-                    {
-                      "text": "Изучить слова",
-                      "callback_data": "$LEARN_WORDS_CALLBACK"
-                    },
-                    {
-                      "text": "Статистика",
-                      "callback_data": "$STATISTIC_CALLBACK"
-                    }
-                  ]
-                ]
-              }
-            }
-        """.trimIndent()
-        return sendPostJsonMessage(sendMenuBody)
+    fun sendMenu(chatId: Long): String {
+        val requestBody = SendMessageRequest(
+            chatId = chatId,
+            text = "Основное меню",
+            replyMarkup = ReplyMarkup(
+                listOf(
+                    listOf(
+                        InlineKeyboard(LEARN_WORDS_CALLBACK, "Изучить слова"),
+                        InlineKeyboard(STATISTIC_CALLBACK, "Статистика"),
+                    ),
+                    listOf(
+                        InlineKeyboard(RESET_CALLBACK, "Сбросить прогресс"),
+                    )
+
+
+                )
+            )
+        )
+        val requestBodyString = json.encodeToString(requestBody)
+        return sendPostJsonMessage(requestBodyString)
     }
 }
