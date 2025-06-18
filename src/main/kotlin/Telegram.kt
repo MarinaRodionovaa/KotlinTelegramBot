@@ -78,7 +78,7 @@ data class InlineKeyboard(
     val text: String,
 )
 
-fun checkNextQuestionAndSend(json: Json, trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Long) {
+fun checkNextQuestionAndSend(trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Long) {
     val question = trainer.getNextQuestion()
     if (question == null) {
         println(tgBotService.sendMessage(chatId, "Все слова выучены"))
@@ -131,7 +131,7 @@ fun handleUpdate(
         }
 
         data == LEARN_WORDS_CALLBACK -> {
-            checkNextQuestionAndSend(json, trainer, tgBotService, chatId)
+            checkNextQuestionAndSend(trainer, tgBotService, chatId)
         }
 
         data == COMEBACK_CALLBACK -> {
@@ -144,17 +144,18 @@ fun handleUpdate(
         }
 
         data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true && trainer.currentQuestion != null -> {
+            val currentQuestion: Question = trainer.currentQuestion ?: return
             if (trainer.checkAnswer(data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toInt())) {
                 println(tgBotService.sendMessage(chatId, "Верно!"))
             } else {
                 println(
                     tgBotService.sendMessage(
                         chatId,
-                        "Неправильно! ${trainer.currentQuestion!!.correctAnswer.word} -  ${trainer.currentQuestion!!.correctAnswer.translate} "
+                        "Неправильно! ${currentQuestion.correctAnswer.word} -  ${currentQuestion.correctAnswer.translate} "
                     )
                 )
             }
-            checkNextQuestionAndSend(json, trainer, tgBotService, chatId)
+            checkNextQuestionAndSend(trainer, tgBotService, chatId)
         }
     }
 

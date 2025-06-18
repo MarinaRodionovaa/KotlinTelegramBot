@@ -106,5 +106,4 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
         dictionary.forEach { it.correctAnswersCount = 0 }
         saveDictionary()
     }
-
 }

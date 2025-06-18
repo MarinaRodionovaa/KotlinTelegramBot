@@ -7,7 +7,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class TelegramBotService(private val botToken: String, val json : Json) {
+class TelegramBotService(private val botToken: String, val json: Json) {
     private val client = HttpClient.newBuilder().build()
 
     companion object {
