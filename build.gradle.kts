@@ -25,11 +25,11 @@ kotlin {
 }
 
 application {
-    mainClass.set("marinarodionova.english.TelegramKt")
+    mainClass.set("marinarodionova.english.telegram.TelegramKt")
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     manifest {
-        attributes["Main-Class"] = "marinarodionova.english.TelegramKt"
+        attributes["Main-Class"] = "marinarodionova.english.telegram.TelegramKt"
     }
 }

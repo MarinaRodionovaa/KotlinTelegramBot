@@ -7,7 +7,7 @@ import java.io.File
 
 class LearnWordsTrainer(
     private val fileName: String = "words.txt",
-    private val maxCorrectAnswersCount: Int = 2,
+    private val maxCorrectAnswersCount: Int = 3,
     private val countOfWords: Int = 3,
 
     ) {
@@ -61,7 +61,7 @@ class LearnWordsTrainer(
             wordsFile.readLines()
                 .mapNotNull { line ->
                     val lineList = line.split("|")
-                    if (lineList.size < maxCorrectAnswersCount) null
+                    if (lineList.size < 2) null
                     else
                         Word(
                             word = lineList[0],
