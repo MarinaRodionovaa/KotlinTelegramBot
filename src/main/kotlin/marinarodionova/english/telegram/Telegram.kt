@@ -1,8 +1,10 @@
-package org.example
+package marinarodionova.english.telegram
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import marinarodionova.english.telegram.entities.Response
+import marinarodionova.english.telegram.entities.Update
+import marinarodionova.english.trainer.LearnWordsTrainer
+import marinarodionova.english.trainer.model.Question
 
 const val STATISTIC_CALLBACK = "statistic_callback"
 const val LEARN_WORDS_CALLBACK = "learn_words_callback"
@@ -16,97 +18,23 @@ const val TIMER_SLEEP_SECONDS: Long = 2000
 const val START_COMMAND = "/start"
 const val MENU_COMMAND = "menu"
 
-@Serializable
-data class Update(
-    @SerialName("update_id")
-    val updateId: Long,
-    @SerialName("message")
-    val message: Message? = null,
-    @SerialName("callback_query")
-    val callbackQuery: CallbackQuery? = null
-)
-
-@Serializable
-data class Response(
-    @SerialName("result")
-    val result: List<Update>,
-)
-
-@Serializable
-data class Message(
-    @SerialName("text")
-    val text: String,
-    @SerialName("chat")
-    val chat: Chat,
-)
-
-@Serializable
-data class CallbackQuery(
-    @SerialName("data")
-    val data: String? = null,
-    @SerialName("message")
-    val message: Message? = null,
-)
-
-@Serializable
-data class Chat(
-    @SerialName("id")
-    val id: Long,
-)
-
-@Serializable
-data class SendMessageRequest(
-    @SerialName("chat_id")
-    val chatId: Long,
-    @SerialName("text")
-    val text: String,
-    @SerialName("reply_markup")
-    val replyMarkup: ReplyMarkup? = null,
-)
-
-@Serializable
-data class ReplyMarkup(
-    @SerialName("inline_keyboard")
-    val inlineKeyboard: List<List<InlineKeyboard>>
-)
-
-@Serializable
-data class InlineKeyboard(
-    @SerialName("callback_data")
-    val callbackData: String,
-    @SerialName("text")
-    val text: String,
-)
-
-fun checkNextQuestionAndSend(trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Long) {
-    val question = trainer.getNextQuestion()
-    if (question == null) {
-        println(tgBotService.sendMessage(chatId, "Все слова выучены"))
-    } else {
-        println(tgBotService.sendQuestion(chatId, question))
-    }
-}
-
 fun main(args: Array<String>) {
     val botToken = args[0]
     var lastUpdateId = 0L
     val json = Json { ignoreUnknownKeys = true }
     val tgBotService = TelegramBotService(botToken, json)
-    val trainer = LearnWordsTrainer()
     val trainers = HashMap<Long, LearnWordsTrainer>()
 
     while (true) {
         Thread.sleep(TIMER_SLEEP_SECONDS)
 
-        val responseString: String = tgBotService.getUpdates(lastUpdateId)
-        println(responseString)
-
-        val response: Response = json.decodeFromString(responseString)
+        val response: Response = tgBotService.getUpdates(lastUpdateId) ?: continue
+        println(response)
 
         if (response.result.isEmpty()) continue
         val sortedUpdates = response.result.sortedBy { it.updateId }
         sortedUpdates.forEach {
-            handleUpdate(it, tgBotService, json, trainers)
+            handleUpdate(it, tgBotService, trainers)
         }
         lastUpdateId = sortedUpdates.last().updateId + 1
     }
@@ -115,7 +43,6 @@ fun main(args: Array<String>) {
 fun handleUpdate(
     update: Update,
     tgBotService: TelegramBotService,
-    json: Json,
     trainers: HashMap<Long, LearnWordsTrainer>
 ) {
 
@@ -151,7 +78,8 @@ fun handleUpdate(
                 println(
                     tgBotService.sendMessage(
                         chatId,
-                        "Неправильно! ${currentQuestion.correctAnswer.word} -  ${currentQuestion.correctAnswer.translate} "
+                        "Неправильно! ${currentQuestion.correctAnswer.word} -  " +
+                                "${currentQuestion.correctAnswer.translate} "
                     )
                 )
             }
@@ -165,5 +93,13 @@ fun handleUpdate(
         START_COMMAND -> println(tgBotService.sendMenu(chatId))
         MENU_COMMAND -> println(tgBotService.sendMenu(chatId))
     }
+}
 
+fun checkNextQuestionAndSend(trainer: LearnWordsTrainer, tgBotService: TelegramBotService, chatId: Long) {
+    val question = trainer.getNextQuestion()
+    if (question == null) {
+        println(tgBotService.sendMessage(chatId, "Все слова выучены"))
+    } else {
+        println(tgBotService.sendQuestion(chatId, question))
+    }
 }

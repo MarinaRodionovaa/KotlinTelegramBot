@@ -1,23 +1,32 @@
-package org.example
+package marinarodionova.english.telegram
 
 import kotlinx.serialization.json.Json
+import marinarodionova.english.telegram.entities.InlineKeyboard
+import marinarodionova.english.telegram.entities.ReplyMarkup
+import marinarodionova.english.telegram.entities.Response
+import marinarodionova.english.telegram.entities.SendMessageRequest
+import marinarodionova.english.trainer.model.Question
 import java.net.URI
-import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class TelegramBotService(private val botToken: String, val json: Json) {
+class TelegramBotService(
+    private val botToken: String,
+    val json: Json,
+) {
     private val client = HttpClient.newBuilder().build()
 
     companion object {
         private const val TG_URL = "https://api.telegram.org/bot"
     }
 
-    private fun getResponseFromUrl(url: String): String {
+    private fun getResponseFromUrl(url: String): String? {
         val requestGet = HttpRequest.newBuilder().uri(URI.create(url)).build()
-        val responseGet = client.send(requestGet, HttpResponse.BodyHandlers.ofString())
-        return responseGet.body()
+        val responseResult = kotlin.runCatching {
+            client.send(requestGet, HttpResponse.BodyHandlers.ofString())
+        }
+        return responseResult.getOrNull()?.body()
     }
 
     private fun sendPostJsonMessage(messageBody: String): String {
@@ -35,9 +44,11 @@ class TelegramBotService(private val botToken: String, val json: Json) {
         }
     }
 
-    fun getUpdates(updateId: Long): String {
+    fun getUpdates(updateId: Long): Response? {
         val urlGetUpdates = "$TG_URL$botToken/getUpdates?offset=$updateId"
-        return getResponseFromUrl(urlGetUpdates)
+        val responseString = getResponseFromUrl(urlGetUpdates)
+        val response: Response? = responseString?.let { json.decodeFromString(it) }
+        return response
     }
 
     fun sendMessage(chatId: Long, text: String): String {

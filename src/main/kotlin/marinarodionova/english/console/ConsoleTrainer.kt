@@ -1,10 +1,15 @@
-package org.example
+package marinarodionova.english.console
 
-const val COUNTS_OF_WORDS = 4
+import marinarodionova.english.trainer.LearnWordsTrainer
+import marinarodionova.english.trainer.model.Question
+import marinarodionova.english.trainer.model.Word
 
 fun Question.asConsoleString(): String {
     val variants =
-        this.variants.mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }.joinToString("\n")
+        this.variants.mapIndexed { index: Int, word: Word ->
+            "${index + 1}" +
+                    " - ${word.translate}"
+        }.joinToString("\n")
     return this.correctAnswer.word + "\n" + variants + "\n----------\n" + "0 - Меню"
 }
 
@@ -40,7 +45,10 @@ fun main() {
                         } else if (trainer.checkAnswer(userAnswerInput.minus(1))) {
                             println("Правильно!")
                         } else {
-                            println("\nНеправильно! ${question.correctAnswer.word} – ${(question.correctAnswer.translate)}\n")
+                            println(
+                                "\nНеправильно! ${question.correctAnswer.word} – " +
+                                        "${(question.correctAnswer.translate)}\n"
+                            )
                         }
                     }
                 }
@@ -54,7 +62,6 @@ fun main() {
 
             else -> println("Введите число 1, 2 или 0")
         }
-
     }
 }
 

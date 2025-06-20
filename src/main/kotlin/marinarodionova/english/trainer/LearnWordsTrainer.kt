@@ -1,39 +1,27 @@
-package org.example
+package marinarodionova.english.trainer
 
-import kotlinx.serialization.Serializable
+import marinarodionova.english.trainer.model.Question
+import marinarodionova.english.trainer.model.Statistics
+import marinarodionova.english.trainer.model.Word
 import java.io.File
 
-@Serializable
-data class Word(
-    val word: String,
-    val translate: String,
-    var correctAnswersCount: Int = 0
-)
+class LearnWordsTrainer(
+    private val fileName: String = "words.txt",
+    private val maxCorrectAnswersCount: Int = 2,
+    private val countOfWords: Int = 3,
 
-data class Statistics(
-    val learned: Int,
-    val total: Int,
-    val percent: Int,
-)
-
-data class Question(
-    val variants: List<Word>,
-    val correctAnswer: Word,
-)
-
-class LearnWordsTrainer(private val fileName: String = "words.txt") {
+    ) {
     var currentQuestion: Question? = null
     private val dictionary = loadDictionary()
-    private val maxCorrectAnswersCount = 3
 
     fun getNextQuestion(): Question? {
         val notLearnedList = getNotLearnedList()
         if (notLearnedList.isNotEmpty()) {
-            var listToLearn = notLearnedList.shuffled().take(COUNTS_OF_WORDS)
+            var listToLearn = notLearnedList.shuffled().take(countOfWords)
             val questionWord = listToLearn.random()
 
             listToLearn += getLearnedList().shuffled()
-                .take((COUNTS_OF_WORDS - notLearnedList.size).coerceAtLeast(0))
+                .take((countOfWords - notLearnedList.size).coerceAtLeast(0))
             currentQuestion = Question(listToLearn.shuffled(), questionWord)
             return currentQuestion
         } else {
@@ -64,23 +52,25 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
     }
 
     private fun loadDictionary(): List<Word> {
-        val wordsFile: File = File(fileName)
+        val wordsFile = File(fileName)
         if (!wordsFile.exists()) {
             File("words.txt").copyTo(wordsFile)
         }
-        val dictionary: MutableList<Word> = mutableListOf()
 
-        try {
-            for (line in wordsFile.readLines()) {
-                val lineList = line.split("|")
-                dictionary.add(
-                    Word(lineList[0], lineList[1], lineList.getOrNull(2)?.toIntOrNull() ?: 0)
-                )
-
-            }
-            return dictionary.toList()
+        return try {
+            wordsFile.readLines()
+                .mapNotNull { line ->
+                    val lineList = line.split("|")
+                    if (lineList.size < maxCorrectAnswersCount) null
+                    else
+                        Word(
+                            word = lineList[0],
+                            translate = lineList[1],
+                            correctAnswersCount = lineList.getOrNull(2)?.toIntOrNull() ?: 0,
+                        )
+                }
         } catch (e: IndexOutOfBoundsException) {
-            throw IllegalStateException("некорректный файл")
+            throw IllegalStateException("некорректный файл", e)
         }
     }
 
@@ -90,7 +80,6 @@ class LearnWordsTrainer(private val fileName: String = "words.txt") {
         dictionary.forEach {
             file.appendText("${it.word}|${it.translate}|${it.correctAnswersCount}\n")
         }
-
     }
 
     private fun getNotLearnedList(): MutableList<Word> {
